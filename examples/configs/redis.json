@@ -1,0 +1,18 @@
+{
+  "backend": "redis",
+  "serializer": "json",
+  "compression": true,
+  "compression_algorithm": "gzip",
+  "redis": {
+    "addresses": ["localhost:6379"],
+    "pool_size": 10,
+    "dial_timeout": "5s",
+    "read_timeout": "3s",
+    "write_timeout": "3s",
+    "pool_timeout": "4s",
+    "idle_timeout": "5m",
+    "max_retries": 3,
+    "min_retry_backoff": "100ms",
+    "max_retry_backoff": "1s"
+  }
+}

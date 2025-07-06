@@ -1,0 +1,13 @@
+{
+  "backend": "memory",
+  "serializer": "json",
+  "compression": true,
+  "compression_algorithm": "gzip",
+  "memory": {
+    "max_size": "100MB",
+    "max_keys": 10000,
+    "eviction_policy": "lru",
+    "default_ttl": "1h",
+    "cleanup_interval": "5m"
+  }
+}

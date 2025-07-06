@@ -1,0 +1,10 @@
+{
+  "backend": "memcached",
+  "serializer": "json",
+  "compression": false,
+  "memcached": {
+    "servers": ["localhost:11211"],
+    "timeout": "5s",
+    "max_idle_conns": 10
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "backend": "memory",
+  "hierarchical": true,
+  "serializer": "json",
+  "compression": true,
+  "compression_algorithm": "gzip",
+  "l1": {
+    "backend": "memory",
+    "ttl": "5m",
+    "memory": {
+      "max_size": "50MB",
+      "max_keys": 1000,
+      "eviction_policy": "lru",
+      "default_ttl": "10m",
+      "cleanup_interval": "1m"
+    }
+  },
+  "l2": {
+    "backend": "redis",
+    "ttl": "30m",
+    "redis": {
+      "addresses": ["localhost:6379"],
+      "pool_size": 10,
+      "dial_timeout": "5s"
+    }
+  }
+}

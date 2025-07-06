@@ -1,0 +1,125 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: [1.21, 1.22]
+
+    services:
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+      memcached:
+        image: memcached:1.6-alpine
+        ports:
+          - 11211:11211
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ matrix.go-version }}
+
+    - name: Cache Go modules
+      uses: actions/cache@v3
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Download dependencies
+      run: go mod download
+
+    - name: Verify dependencies
+      run: go mod verify
+
+    - name: Build
+      run: make build
+
+    - name: Run tests
+      run: make test
+
+    - name: Run integration tests
+      run: make test-integration
+      env:
+        REDIS_URL: localhost:6379
+        MEMCACHED_URL: localhost:11211
+
+    - name: Run examples
+      run: |
+        make example-basic
+        timeout 10s make example-redis || true
+        timeout 10s make example-memcached || true
+
+    - name: Check formatting
+      run: make fmt-check
+
+    - name: Run linter
+      uses: golangci/golangci-lint-action@v3
+      with:
+        version: latest
+
+    - name: Run security scan
+      uses: securecodewarrior/github-action-gosec@master
+      with:
+        args: './...'
+
+  coverage:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: 1.21
+
+    - name: Run coverage
+      run: make coverage
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.out
+        flags: unittests
+        name: codecov-umbrella
+
+  build-examples:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: 1.21
+
+    - name: Build all examples
+      run: |
+        cd examples/basic && go build -v .
+        cd ../redis && go build -v .
+        cd ../memcached && go build -v .
+        cd ../hierarchical && go build -v .
+        cd ../cli && go build -v .
