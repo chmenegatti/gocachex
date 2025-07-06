@@ -161,8 +161,8 @@ func TestMemoryBackendStats(t *testing.T) {
 	// Perform some operations
 	_ = cache.Set(ctx, "key1", "value1", time.Minute)
 	_ = cache.Set(ctx, "key2", "value2", time.Minute)
-	_, _ = cache.Get(ctx, "key1")    // Hit
-	_, _ = cache.Get(ctx, "key3")    // Miss
+	_, _ = cache.Get(ctx, "key1") // Hit
+	_, _ = cache.Get(ctx, "key3") // Miss
 	_ = cache.Delete(ctx, "key2") // Delete
 
 	// Get stats
