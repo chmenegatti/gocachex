@@ -7,7 +7,7 @@ before:
 
 builds:
   - id: gocachex-cli
-    main: ./examples/cli
+    main: ./examples/cli/main.go
     binary: gocachex-cli
     env:
       - CGO_ENABLED=0
