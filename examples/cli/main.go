@@ -151,7 +151,7 @@ func loadConfigFromFile(path string) (config.Config, error) {
 }
 
 func runDemo(ctx context.Context, cache gocachex.Cache) {
-	fmt.Println("\nRunning demo operations...\n")
+	fmt.Println("\nRunning demo operations...")
 
 	// 1. Set some demo data
 	demoData := map[string]interface{}{
