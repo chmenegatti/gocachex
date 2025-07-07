@@ -22,12 +22,15 @@ webserver/
 ## Exemplos Disponíveis
 
 ### 1. `basic/` - Web Server Básico
+
 Demonstra uso básico do GoCacheX com cache in-memory em uma API REST simples.
 
 ### 2. `hierarchical/` - Cache Hierárquico
+
 Demonstra cache hierárquico (L1/L2) usando Memory + Redis para máxima performance.
 
 ### 3. `multibackend/` - Múltiplos Backends
+
 Demonstra diferentes estratégias de backend de cache.
 
 ## Características Demonstradas

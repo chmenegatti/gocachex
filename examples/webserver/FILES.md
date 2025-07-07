@@ -4,7 +4,7 @@
 
 O erro de "main redeclared" foi **resolvido** organizando os exemplos em diretórios separados:
 
-```
+```text
 webserver/
 ├── basic/           # Exemplo básico (porta 8080)
 │   ├── main.go      # Web server com cache in-memory
@@ -27,6 +27,7 @@ webserver/
 ## 🚀 Como Usar Agora
 
 ### Exemplo Básico
+
 ```bash
 cd examples/webserver/basic
 go run main.go
@@ -35,6 +36,7 @@ go run main.go
 ```
 
 ### Exemplo Hierárquico
+
 ```bash
 cd examples/webserver/hierarchical
 go run main.go
@@ -43,6 +45,7 @@ go run main.go
 ```
 
 ### Exemplo Multi-Backend
+
 ```bash
 cd examples/webserver/multibackend
 go run main.go
@@ -57,18 +60,21 @@ go run main.go
 ## 🎯 Características por Exemplo
 
 ### Basic (Porta 8080)
+
 - Cache in-memory com LRU
 - API REST completa (usuários)
 - Headers de cache (HIT/MISS)
 - Estatísticas e health checks
 
 ### Hierarchical (Porta 8081)
+
 - Cache L1 (Memory) + L2 (Redis)
 - Promoção automática de dados
 - Fallback gracioso sem Redis
 - API REST (produtos)
 
 ### Multi-Backend
+
 - Comparação de backends
 - Diferentes configurações
 - Análise de performance
@@ -86,7 +92,8 @@ Os exemplos estão agora **totalmente funcionais** e **livres de erros de compil
 ## Estrutura dos Exemplos
 
 ### Web Server Básico (`main.go`)
-```
+
+```text
 Features:
 ✅ Cache in-memory com LRU
 ✅ API REST completa (CRUD)
@@ -109,7 +116,8 @@ Endpoints:
 ```
 
 ### Cache Hierárquico (`hierarchical_cache.go`)
-```
+
+```text
 Features:
 ✅ Cache L1 (Memory) + L2 (Redis)
 ✅ Promoção automática L2→L1
@@ -128,6 +136,7 @@ Endpoints:
 ## Como Usar
 
 ### 1. Executar Exemplo Básico
+
 ```bash
 go run main.go
 # Servidor na porta 8080
@@ -135,6 +144,7 @@ go run main.go
 ```
 
 ### 2. Executar Exemplo Hierárquico
+
 ```bash
 # Opcional: Redis
 docker run -d -p 6379:6379 redis:alpine
@@ -147,6 +157,7 @@ go run hierarchical_cache.go
 ## Tecnologias Demonstradas
 
 ### GoCacheX Features
+
 - [x] Multiple backends (Memory, Redis)
 - [x] Hierarchical caching (L1/L2)
 - [x] Compression (gzip)
@@ -159,6 +170,7 @@ go run hierarchical_cache.go
 - [x] TTL management
 
 ### Web Server Features
+
 - [x] RESTful API design
 - [x] JSON serialization
 - [x] Error handling
@@ -170,16 +182,19 @@ go run hierarchical_cache.go
 ## Benefícios Demonstrados
 
 ### Performance
+
 - **Cache Hits**: Respostas instantâneas do cache
 - **Hierarchical**: Máxima velocidade com L1, capacidade com L2
 - **Compression**: Redução do uso de memória/rede
 
 ### Reliability
+
 - **Health Checks**: Monitoramento da saúde do cache
 - **Graceful Fallback**: Funciona mesmo sem Redis
 - **Error Handling**: Tratamento robusto de erros
 
 ### Observability
+
 - **Cache Headers**: Visibilidade de hits/misses
 - **Statistics**: Métricas detalhadas de performance
 - **Logging**: Rastreamento de operações
@@ -187,6 +202,7 @@ go run hierarchical_cache.go
 ## Próximos Passos
 
 Para usar em produção, considere:
+
 - [ ] Adicionar autenticação/autorização
 - [ ] Implementar rate limiting
 - [ ] Configurar métricas Prometheus
