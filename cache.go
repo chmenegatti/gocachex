@@ -19,7 +19,7 @@ type Cache[T any] interface {
 
 	// Exists checks if a key exists in the cache.
 	Exists(ctx context.Context, key string) (bool, error)
-	
+
 	// Clear purges all keys from the cache.
 	Clear(ctx context.Context) error
 

@@ -1,6 +1,10 @@
 package gocachex
 
-// Options defines a collection of functional options for configuring a cache backend.
-// Note: Backend implementations (memory, redis, memcached) define their own specific Option types,
-// returning backend-specific functions. This file serves as a placeholder for potential
-// library-wide default configuration patterns if needed in the future.
+// Option defines a functional option for configuring the cache.
+// This replaces the old monolithic Config struct.
+type Option func(*Options)
+
+// Options holds cache configuration values.
+type Options struct {
+	// Options will be expanded during Phase 2 API Design Review.
+}

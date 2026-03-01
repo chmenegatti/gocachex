@@ -3,12 +3,10 @@ package gocachex
 import "errors"
 
 var (
-	// ErrCacheMiss is returned when a key is not found in the cache.
+	// ErrCacheMiss indicates that the requested key does not exist in the cache
+	// or has already expired.
 	ErrCacheMiss = errors.New("cache miss")
 
-	// ErrInvalidConfig is returned when the given cache configuration is invalid.
+	// ErrInvalidConfig indicates that the configuration provided is invalid.
 	ErrInvalidConfig = errors.New("invalid cache configuration")
-
-	// ErrBackendUnavailable is returned when the underlying caching backend is unreachable.
-	ErrBackendUnavailable = errors.New("cache backend unavailable")
 )
