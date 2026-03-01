@@ -1,302 +1,192 @@
-# GoCacheX 🚀
+# gocachex
 
-[![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://golang.org/)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Go Report Card](https://goreportcard.com/badge/github.com/chmenegatti/gocachex)](https://goreportcard.com/report/github.com/chmenegatti/gocachex)
-[![GoDoc](https://godoc.org/github.com/chmenegatti/gocachex?status.svg)](https://godoc.org/github.com/chmenegatti/gocachex)
-[![GitHub release](https://img.shields.io/github/release/chmenegatti/gocachex.svg)](https://github.com/chmenegatti/gocachex/releases)
-[![GitHub stars](https://img.shields.io/github/stars/chmenegatti/gocachex.svg)](https://github.com/chmenegatti/gocachex/stargazers)
-[![Coverage Status](https://coveralls.io/repos/github/chmenegatti/gocachex/badge.svg?branch=main)](https://coveralls.io/github/chmenegatti/gocachex?branch=main)
+<p align="center">
+  <img src="https://img.shields.io/github/v/release/chmenegatti/gocachex" alt="Latest Release">
+  <a href="https://godoc.org/github.com/chmenegatti/gocachex"><img src="https://godoc.org/github.com/chmenegatti/gocachex?status.svg" alt="GoDoc"></a>
+  <img src="https://github.com/chmenegatti/gocachex/actions/workflows/ci.yml/badge.svg" alt="Build Status">
+  <img src="https://img.shields.io/badge/go-1.21+-blue.svg" alt="Go Version">
+</p>
 
-**GoCacheX** é uma biblioteca de cache distribuído plug-and-play em Go, projetada para ser simples, eficiente e altamente escalável. Suporta múltiplos backends, recursos avançados de cache e monitoramento completo.
+**A production-grade, generic caching library for Go.**
 
-## ✨ Características
+`gocachex` provides a unified, zero-allocation type-safe caching abstraction with interchangeable backends. Stop casting `interface{}` and start using modern Go features.
 
-### 🔌 Múltiplos Backends
+## Features
 
-- **Redis**: Suporte completo com clustering e persistência
-- **Memcached**: Implementação otimizada para alta performance
-- **In-Memory**: Cache local de alta velocidade
-- **Plugin System**: Arquitetura extensível para backends customizados
+- **Generics throughout**: 100% type-safe `Cache[T any]` interface. No more internal type assertions.
+- **Interchangeable Backends**: 
+  - `memory`: High-performance thread-safe local cache with automatic background eviction.
+  - `redis`: Distributed cache via `go-redis/v9` with JSON serialization.
+  - `memcached`: Out-of-the-box Memcached support.
+- **Cache-Aside Helper**: `gocachex.Remember` handles Cache-Miss data-loading with **stampede protection** (`singleflight`).
+- **Observability**: Built-in, optional Prometheus Hooks for latency, hits, and misses.
 
-### 🚀 Recursos Avançados
-
-- **Sharding Automático**: Distribuição inteligente de dados entre nós
-- **Políticas de Invalidação**: TTL, LRU, LFU configuráveis
-- **Cache Hierárquico**: Suporte a L1/L2 cache
-- **Compressão**: Compressão opcional de dados com múltiplos algoritmos
-- **Serialização**: Serialização/deserialização automática de objetos Go
-
-### 🔄 Sincronização Distribuída
-
-- **gRPC Integration**: Comunicação eficiente entre nós
-- **Invalidação Distribuída**: Protocolo de invalidação consistente
-- **Operações Atômicas**: Suporte a operações distribuídas ACID
-
-### 📊 Monitoramento & Observabilidade
-
-- **Métricas Prometheus**: Exportação nativa de métricas
-- **OpenTelemetry**: Rastreamento distribuído completo
-- **Logging Estruturado**: Logs estruturados com múltiplos níveis
-- **Health Checks**: Verificações de saúde dos backends
-
-## 🚀 Instalação
+## Installation
 
 ```bash
 go get github.com/chmenegatti/gocachex
 ```
 
-## 💡 Uso Rápido
+*Requires Go 1.21 or later.*
 
-### Cache Básico
+## Quick Start
+
+### 1. In-Memory Cache
 
 ```go
 package main
 
 import (
-    "context"
-    "fmt"
-    "time"
-
-    "github.com/chmenegatti/gocachex"
+	"context"
+	"fmt"
+	"time"
+	"github.com/chmenegatti/gocachex/memory"
 )
 
+type User struct {
+	ID   int
+	Name string
+}
+
 func main() {
-    // Criar cache in-memory
-    cache := gocachex.New(gocachex.Config{
-        Backend: "memory",
-    })
+	// Initialize the memory cache with automatic background cleanup
+	cache := memory.New[User](memory.WithCleanupInterval[User](time.Minute))
+	ctx := context.Background()
 
-    ctx := context.Background()
+	// Set
+	_ = cache.Set(ctx, "user:1", User{ID: 1, Name: "Alice"}, 5*time.Minute)
 
-    // Set
-    cache.Set(ctx, "key", "value", time.Minute)
-
-    // Get
-    value, err := cache.Get(ctx, "key")
-    if err != nil {
-        panic(err)
-    }
-    fmt.Println(value) // Output: value
+	// Get
+	user, err := cache.Get(ctx, "user:1")
+	if err == nil {
+		fmt.Printf("Cached user: %+v\n", user)
+	}
 }
 ```
 
-### Cache Redis
+### 2. Cache-Aside Pattern with Stampede Protection
+
+The `Remember` helper avoids executing your database query multiple times when a flurry of requests causes a cache miss.
 
 ```go
-cache := gocachex.New(gocachex.Config{
-    Backend: "redis",
-    Redis: gocachex.RedisConfig{
-        Addresses: []string{"localhost:6379"},
-        Password:  "",
-        DB:        0,
-    },
+user, err := gocachex.Remember(ctx, cache, "user:1", 5*time.Minute, func() (User, error) {
+    // ⬇️ This is only executed ONCE, even if 100 goroutines hit this simultaneously
+    return db.GetUserByID(1)
 })
 ```
 
-### Cache Distribuído com gRPC
+### 3. Redis Cache
 
 ```go
-cache := gocachex.New(gocachex.Config{
-    Backend:     "redis",
-    Distributed: true,
-    GRPC: gocachex.GRPCConfig{
-        Port:  50051,
-        Peers: []string{"node1:50051", "node2:50051"},
-    },
-    Redis: gocachex.RedisConfig{
-        Addresses: []string{"localhost:6379"},
-    },
-})
-```
+package main
 
-### Cache Hierárquico (L1/L2)
+import (
+	"context"
+	"fmt"
+	"time"
 
-```go
-cache := gocachex.New(gocachex.Config{
-    Hierarchical: true,
-    L1: gocachex.CacheConfig{
-        Backend: "memory",
-        Size:    "100MB",
-    },
-    L2: gocachex.CacheConfig{
-        Backend: "redis",
-        Redis: gocachex.RedisConfig{
-            Addresses: []string{"localhost:6379"},
-        },
-    },
-})
-```
+	"github.com/chmenegatti/gocachex/redis"
+	goredis "github.com/redis/go-redis/v9"
+)
 
-## 📖 Documentação
+type Product struct {
+	ID    int    `json:"id"`
+	Title string `json:"title"`
+}
 
-### Interface Principal
+func main() {
+	rdb := goredis.NewClient(&goredis.Options{Addr: "localhost:6379"})
+	
+	// Initialize the generic Redis cache for 'Product'
+	cache := redis.New[Product](rdb)
+	defer cache.Close()
 
-```go
-type Cache interface {
-    // Operações básicas
-    Get(ctx context.Context, key string) (interface{}, error)
-    Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error
-    Delete(ctx context.Context, key string) error
-    Exists(ctx context.Context, key string) (bool, error)
+	ctx := context.Background()
+	_ = cache.Set(ctx, "product:101", Product{ID: 101, Title: "Mechanical Keyboard"}, 10*time.Minute)
 
-    // Operações em lote
-    GetMulti(ctx context.Context, keys []string) (map[string]interface{}, error)
-    SetMulti(ctx context.Context, items map[string]interface{}, ttl time.Duration) error
-    DeleteMulti(ctx context.Context, keys []string) error
-
-    // Operações atômicas
-    Increment(ctx context.Context, key string, delta int64) (int64, error)
-    Decrement(ctx context.Context, key string, delta int64) (int64, error)
-
-    // Gerenciamento
-    Clear(ctx context.Context) error
-    Stats(ctx context.Context) (*Stats, error)
-    Health(ctx context.Context) error
+	product, _ := cache.Get(ctx, "product:101")
+	fmt.Printf("Cached product: %+v\n", product)
 }
 ```
 
-### Configuração
+### 4. Memcached Cache
 
 ```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/bradfitz/gomemcache/memcache"
+	"github.com/chmenegatti/gocachex/memcached"
+)
+
 type Config struct {
-    Backend      string        `json:"backend"`       // "memory", "redis", "memcached"
-    Compression  bool          `json:"compression"`   // Habilitar compressão
-    Serializer   string        `json:"serializer"`    // "json", "gob", "msgpack"
-    Distributed  bool          `json:"distributed"`   // Cache distribuído
-    Hierarchical bool          `json:"hierarchical"`  // Cache hierárquico
-    
-    // Configurações específicas
-    Memory    MemoryConfig    `json:"memory,omitempty"`
-    Redis     RedisConfig     `json:"redis,omitempty"`
-    Memcached MemcachedConfig `json:"memcached,omitempty"`
-    GRPC      GRPCConfig      `json:"grpc,omitempty"`
-    
-    // Cache hierárquico
-    L1 CacheConfig `json:"l1,omitempty"`
-    L2 CacheConfig `json:"l2,omitempty"`
-    
-    // Monitoramento
-    Prometheus PrometheusConfig `json:"prometheus,omitempty"`
-    Tracing    TracingConfig    `json:"tracing,omitempty"`
+	FeatureToggle bool `json:"feature_toggle"`
+}
+
+func main() {
+	mc := memcache.New("localhost:11211")
+
+	// Initialize the generic Memcached cache for 'Config'
+	cache := memcached.New[Config](mc)
+	ctx := context.Background()
+
+	_ = cache.Set(ctx, "app:config", Config{FeatureToggle: true}, time.Hour)
+
+	cfg, _ := cache.Get(ctx, "app:config")
+	fmt.Printf("Cached config: %+v\n", cfg)
 }
 ```
 
-## 🏗️ Arquitetura
+## Architecture Overview
 
-```bash
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Application   │    │   Application   │    │   Application   │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         └───────────────────────┼───────────────────────┘
-                                 │
-┌─────────────────────────────────────────────────────────────────┐
-│                        GoCacheX                                 │
-├─────────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
-│  │   Memory    │  │    Redis    │  │      Memcached          │  │
-│  │   Backend   │  │   Backend   │  │       Backend           │  │
-│  └─────────────┘  └─────────────┘  └─────────────────────────┘  │
-├─────────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
-│  │ Compression │  │ Serializer  │  │    Sharding             │  │
-│  └─────────────┘  └─────────────┘  └─────────────────────────┘  │
-├─────────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
-│  │ Monitoring  │  │   Tracing   │  │      Metrics            │  │
-│  └─────────────┘  └─────────────┘  └─────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
+`gocachex` revolves around a single core interface:
+
+```go
+type Cache[T any] interface {
+	Get(ctx context.Context, key string) (T, error)
+	Set(ctx context.Context, key string, value T, ttl time.Duration) error
+	Delete(ctx context.Context, key string) error
+	Exists(ctx context.Context, key string) (bool, error)
+	Clear(ctx context.Context) error
+	Close() error
+}
 ```
 
-## 📊 Métricas
+Backends live in their own packages (`memory`, `redis`, `memcached`) preventing heavy dependencies if you only need a specific backend.
 
-GoCacheX exporta métricas detalhadas para Prometheus:
+## Performance Benchmarks
 
-- `gocachex_operations_total`: Total de operações por tipo
-- `gocachex_operation_duration_seconds`: Duração das operações
-- `gocachex_cache_hits_total`: Total de cache hits
-- `gocachex_cache_misses_total`: Total de cache misses
-- `gocachex_cache_size_bytes`: Tamanho do cache em bytes
-- `gocachex_active_connections`: Conexões ativas por backend
+Run the benchmarks locally with `go test -bench . ./benchmarks/...`:
 
-## 🧪 Testes
+| Backend | Operation | Time (ns/op) |
+| --- | --- | --- |
+| **Memory** | Set | ~476 ns/op |
+| **Memory** | Get | ~41 ns/op |
+| **Redis** (Local) | Set | ~35,904 ns/op |
+| **Redis** (Local) | Get | ~31,403 ns/op |
 
-```bash
-# Executar todos os testes
-make test
+*Note: Distributed backends incorporate network and serialization latency.*
 
-# Testes com cobertura
-make test-coverage
+## Supported Backends
+* `github.com/chmenegatti/gocachex/memory` - Native sync.RWMutex
+* `github.com/chmenegatti/gocachex/redis` - Uses `github.com/redis/go-redis/v9` 
+* `github.com/chmenegatti/gocachex/memcached` - Uses `github.com/bradfitz/gomemcache`
 
-# Testes de integração
-make test-integration
+## Roadmap
 
-# Benchmarks
-make benchmark
-```
+Upcoming features planned for v2:
+- [ ] Distributed cache invalidation (Pub/Sub)
+- [ ] Pluggable serialization interfaces (MsgPack, Protobuf)
+- [ ] OpenTelemetry integration hooks
 
-## 🔧 Desenvolvimento
+## Contributing
 
-```bash
-# Clonar o repositório
-git clone https://github.com/chmenegatti/gocachex.git
-cd gocachex
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md).
 
-# Instalar dependências
-go mod download
+## License
 
-# Executar testes
-make test
-
-# Executar linting
-make lint
-
-# Build
-make build
-```
-
-## 📚 Exemplos
-
-Confira os exemplos completos no diretório [`examples/`](./examples/):
-
-- [Cache Básico](./examples/basic/)
-- [Cache Redis](./examples/redis/)
-- [Cache Distribuído](./examples/distributed/)
-- [Cache Hierárquico](./examples/hierarchical/)
-- [Web Server](./examples/webserver/)
-- [Microserviços](./examples/microservices/)
-- [CLI Tool](./examples/cli/)
-
-## 🤝 Contribuindo
-
-Contribuições são bem-vindas! Por favor, leia o [CONTRIBUTING.md](./CONTRIBUTING.md) para detalhes sobre nosso processo de desenvolvimento.
-
-1. Fork o projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
-
-## 📄 Licença
-
-Este projeto está licenciado sob a Apache License 2.0 - veja o arquivo [LICENSE](LICENSE) para detalhes.
-
-## 🙏 Agradecimentos
-
-- [Go Redis](https://github.com/redis/go-redis) - Cliente Redis para Go
-- [GoMemcache](https://github.com/bradfitz/gomemcache) - Cliente Memcached
-- [Prometheus](https://prometheus.io/) - Monitoramento e alertas
-- [OpenTelemetry](https://opentelemetry.io/) - Observabilidade
-
-## 🔗 Links Úteis
-
-- [Documentação](https://godoc.org/github.com/chmenegatti/gocachex)
-- [Exemplos](./examples/)
-- [Changelog](./CHANGELOG.md)
-- [Issues](https://github.com/chmenegatti/gocachex/issues)
-- [Discussions](https://github.com/chmenegatti/gocachex/discussions)
-
----
-
-### Feito com ❤️ em Go
+MIT License. See [LICENSE](LICENSE) for more information.
