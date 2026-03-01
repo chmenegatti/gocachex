@@ -5,7 +5,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/chmenegatti/gocachex/pkg/config"
+	"github.com/chmenegatti/gocachex/internal/config"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"

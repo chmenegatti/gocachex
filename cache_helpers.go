@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/chmenegatti/gocachex/pkg/backends"
-	"github.com/chmenegatti/gocachex/pkg/config"
-	"github.com/chmenegatti/gocachex/pkg/sharding"
+	"github.com/chmenegatti/gocachex/internal/backends"
+	"github.com/chmenegatti/gocachex/internal/config"
+	"github.com/chmenegatti/gocachex/internal/sharding"
 )
 
 // NoOpSpan is a no-operation span for when tracing is disabled.

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/bradfitz/gomemcache/memcache"
-	"github.com/chmenegatti/gocachex/pkg/config"
+	"github.com/chmenegatti/gocachex/internal/config"
 )
 
 // MemcachedBackend implements a Memcached cache backend.

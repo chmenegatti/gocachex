@@ -8,7 +8,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/chmenegatti/gocachex/pkg/config"
+	"github.com/chmenegatti/gocachex/internal/config"
 )
 
 // MemoryBackend implements an in-memory cache backend.

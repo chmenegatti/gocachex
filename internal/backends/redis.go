@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/chmenegatti/gocachex/pkg/config"
+	"github.com/chmenegatti/gocachex/internal/config"
 	"github.com/redis/go-redis/v9"
 )
 

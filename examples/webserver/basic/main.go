@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/chmenegatti/gocachex"
-	"github.com/chmenegatti/gocachex/pkg/config"
+	"github.com/chmenegatti/gocachex/internal/config"
 )
 
 // User represents a simple user model

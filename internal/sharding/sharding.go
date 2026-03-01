@@ -7,8 +7,8 @@ import (
 	"hash/crc32"
 	"sort"
 
-	"github.com/chmenegatti/gocachex/pkg/backends"
-	"github.com/chmenegatti/gocachex/pkg/config"
+	"github.com/chmenegatti/gocachex/internal/backends"
+	"github.com/chmenegatti/gocachex/internal/config"
 )
 
 // Sharder provides data sharding functionality.

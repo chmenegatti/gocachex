@@ -30,8 +30,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/chmenegatti/gocachex/pkg/backends"
-	"github.com/chmenegatti/gocachex/pkg/config"
+	"github.com/chmenegatti/gocachex/internal/backends"
+	"github.com/chmenegatti/gocachex/internal/config"
 )
 
 // Cache represents the main cache interface that all backends must implement.
